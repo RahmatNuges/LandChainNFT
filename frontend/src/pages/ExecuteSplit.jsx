@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import LandCertificateABI from '../abis/LandCertificate.json';
 import { getPendingSplitRequests, removePendingSplitRequest } from '../utils/pendingRequests';
+import { config } from '../config';
 
-const CONTRACT_ADDRESS = "0x4a0332c599Db448b1A84ebFA59cfD6918B14595d";
+const { CONTRACT_ADDRESS } = config;
 
 // Component untuk menampilkan setiap split request dengan approval status
 function SplitRequestCard({ request, account, onExecute, executing }) {
@@ -19,7 +20,7 @@ function SplitRequestCard({ request, account, onExecute, executing }) {
         const contract = new ethers.Contract(CONTRACT_ADDRESS, LandCertificateABI, provider);
         const approved = await contract.getApproved(request.parentId);
         const isApprovedForAll = await contract.isApprovedForAll(request.ownerAddress, account);
-        
+
         const isApproved = approved.toLowerCase() === account.toLowerCase() || isApprovedForAll;
         setApprovalStatus(isApproved);
       } catch (err) {
@@ -89,12 +90,12 @@ function SplitRequestCard({ request, account, onExecute, executing }) {
           )}
         </div>
       )}
-      
+
       {/* Detailed View */}
       {showDetails && (
         <div className="mt-4 p-6 bg-gray-50 rounded-lg border border-gray-200 space-y-4">
           <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">Complete Split Request Details</h4>
-          
+
           {/* Basic Information */}
           <div>
             <h5 className="text-sm font-semibold text-gray-700 mb-2">Basic Information</h5>
@@ -150,7 +151,7 @@ function SplitRequestCard({ request, account, onExecute, executing }) {
                         <p className="font-mono text-xs text-gray-800 break-all mt-1">{request.tokenURIs[idx]}</p>
                       </div>
                     </div>
-                    
+
                     {/* Child Metadata Details */}
                     {request.metadata && request.metadata[idx] && (
                       <div className="mt-3 pt-3 border-t border-gray-200">
@@ -364,7 +365,7 @@ export default function ExecuteSplit({ account }) {
       const contract = new ethers.Contract(CONTRACT_ADDRESS, LandCertificateABI, provider);
       const approved = await contract.getApproved(request.parentId);
       const isApprovedForAll = await contract.isApprovedForAll(request.ownerAddress, account);
-      
+
       if (approved.toLowerCase() !== account.toLowerCase() && !isApprovedForAll) {
         setStatus(`Error: This institution is not approved for token ${request.parentId}. The owner must approve this institution first.`);
         return;
@@ -379,21 +380,21 @@ export default function ExecuteSplit({ account }) {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(CONTRACT_ADDRESS, LandCertificateABI, signer);
-      
+
       const tx = await contract.splitCertificate(
         request.parentId,
         request.recipients,
         request.tokenURIs,
         request.signature
       );
-      
+
       setStatus(`Split in progress... Transaction Hash: ${tx.hash}`);
       await tx.wait();
-      
+
       // Remove from pending requests
       removePendingSplitRequest(request.id);
       loadPendingRequests();
-      
+
       setStatus(`Split Certificate successful! Parent token ${request.parentId} has been split into ${request.recipients.length} child tokens.`);
       setTimeout(() => window.location.reload(), 2000);
     } catch (err) {

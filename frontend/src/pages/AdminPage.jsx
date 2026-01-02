@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import LandCertificateABI from '../abis/LandCertificate.json';
+import { config } from '../config';
 
-const CONTRACT_ADDRESS = "0x4a0332c599Db448b1A84ebFA59cfD6918B14595d";
+const { CONTRACT_ADDRESS } = config;
 
 export default function AdminPage({ account }) {
   const [isContractOwner, setIsContractOwner] = useState(false);

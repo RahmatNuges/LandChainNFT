@@ -3,10 +3,9 @@ import { ethers } from 'ethers';
 import LandCertificateABI from '../abis/LandCertificate.json';
 import axios from 'axios';
 import { signMintRequest } from '../utils/eip712';
+import { config } from '../config';
 
-const CONTRACT_ADDRESS = "0x4a0332c599Db448b1A84ebFA59cfD6918B14595d";
-const PINATA_API_KEY = "3477e87bd404b5490bbd"; // Ganti dengan API Key Pinata Anda
-const PINATA_API_SECRET = "e2eb35f6fe50896ab89cda093648ce30e4cdeba62e31d7342f9fd83bcf50be1c"; // Ganti dengan API Secret Pinata Anda
+const { CONTRACT_ADDRESS, PINATA_API_KEY, PINATA_API_SECRET } = config;
 
 export default function MintCertificate({ account }) {
   const [form, setForm] = useState({
@@ -52,7 +51,7 @@ export default function MintCertificate({ account }) {
       metadata.image = imageCid;
       metadata.fileCid = imageCid;
     }
-    
+
     const res2 = await axios.post('https://api.pinata.cloud/pinning/pinJSONToIPFS', metadata, {
       headers: {
         'Content-Type': 'application/json',
@@ -66,17 +65,17 @@ export default function MintCertificate({ account }) {
   const handleSubmit = async e => {
     e.preventDefault();
     if (!account) {
-        setStatus("Error: Please connect your wallet first.");
-        return;
+      setStatus("Error: Please connect your wallet first.");
+      return;
     }
     if (!toAddress || !ethers.isAddress(toAddress)) {
-        setStatus("Error: Please enter a valid recipient address.");
-        return;
+      setStatus("Error: Please enter a valid recipient address.");
+      return;
     }
-    
+
     setStatus('Uploading data to IPFS (Pinata)...');
     setCurrentStep(1);
-    
+
     try {
       const metadata = {
         lokasi: {
@@ -98,7 +97,7 @@ export default function MintCertificate({ account }) {
       setCid(uploadedCid);
       setStatus('Data successfully uploaded to IPFS. Please proceed to request owner signature.');
       setCurrentStep(2);
-      
+
     } catch (err) {
       console.error(err);
       setStatus('Upload failed, please try again');
@@ -113,12 +112,12 @@ export default function MintCertificate({ account }) {
     }
 
     setStatus('Requesting signature from land owner...');
-    
+
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const network = await provider.getNetwork();
       const chainId = network.chainId;
-      
+
       // Request signature from the land owner (toAddress)
       const signature = await signMintRequest(
         provider,
@@ -131,19 +130,21 @@ export default function MintCertificate({ account }) {
 
       setStatus('Signature received. Executing mint transaction...');
       setCurrentStep(3);
-      
+
       // Execute mint with signature
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(CONTRACT_ADDRESS, LandCertificateABI, signer);
       const tx = await contract.mintCertificate(toAddress, cid, signature);
-      
+
       setStatus(`Minting in progress... Transaction Hash: ${tx.hash}`);
       await tx.wait();
       setStatus(`Certificate successfully minted! Token URI (IPFS CID): ${cid}`);
-      
+
       // Reset form
-      setForm({ jalan: '', rt: '', rw: '', desa: '', kecamatan: '', kabupaten: '', provinsi: '', luas: '', statusHukum: '', deskripsi: '',
-        nomorSuratUkur: '', batasUtara: '', batasTimur: '', batasBarat: '', batasSelatan: '' });
+      setForm({
+        jalan: '', rt: '', rw: '', desa: '', kecamatan: '', kabupaten: '', provinsi: '', luas: '', statusHukum: '', deskripsi: '',
+        nomorSuratUkur: '', batasUtara: '', batasTimur: '', batasBarat: '', batasSelatan: ''
+      });
       setFile(null);
       setFileName('');
       setToAddress('');
@@ -166,7 +167,7 @@ export default function MintCertificate({ account }) {
     <div className="max-w-4xl mx-auto p-4 md:p-8">
       <h1 className="text-3xl font-bold text-gray-800 mb-2">Create Digital Land Certificate</h1>
       <p className="text-gray-600 mb-8">Fill in all the details below to mint your property as a unique NFT on the blockchain.</p>
-      
+
       {/* Step Indicator */}
       <div className="mb-6 bg-white p-4 rounded-lg shadow-md">
         <div className="flex items-center justify-between">
@@ -186,26 +187,26 @@ export default function MintCertificate({ account }) {
           </div>
         </div>
       </div>
-      
+
       <form onSubmit={handleSubmit} className="space-y-8 bg-white p-8 rounded-2xl shadow-lg">
         {/* Recipient Address */}
         <div className="space-y-4 border-b pb-4">
           <h2 className="text-xl font-semibold text-gray-700">Land Owner Address</h2>
           <div>
             <label htmlFor="toAddress" className="block text-sm font-medium text-gray-700">Recipient Address (Land Owner)</label>
-            <input 
-              type="text" 
-              id="toAddress" 
-              value={toAddress} 
-              onChange={(e) => setToAddress(e.target.value)} 
-              placeholder="0x..." 
-              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" 
-              required 
+            <input
+              type="text"
+              id="toAddress"
+              value={toAddress}
+              onChange={(e) => setToAddress(e.target.value)}
+              placeholder="0x..."
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500"
+              required
             />
             <p className="mt-1 text-xs text-gray-500">This address will receive the certificate and must sign the mint request.</p>
           </div>
         </div>
-        
+
         {/* Informasi Properti */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-gray-700 border-b pb-2">1. Property Information</h2>
@@ -276,11 +277,11 @@ export default function MintCertificate({ account }) {
               <label htmlFor="kecamatan" className="block text-sm font-medium text-gray-700">District</label>
               <input type="text" name="kecamatan" id="kecamatan" value={form.kecamatan} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" required />
             </div>
-             <div>
+            <div>
               <label htmlFor="kabupaten" className="block text-sm font-medium text-gray-700">Regency / City</label>
               <input type="text" name="kabupaten" id="kabupaten" value={form.kabupaten} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" required />
             </div>
-             <div>
+            <div>
               <label htmlFor="provinsi" className="block text-sm font-medium text-gray-700">Province</label>
               <input type="text" name="provinsi" id="provinsi" value={form.provinsi} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" required />
             </div>
@@ -289,26 +290,26 @@ export default function MintCertificate({ account }) {
 
         {/* Upload File */}
         <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-700 border-b pb-2">3. Digital Document</h2>
-            <div className="pt-4">
-                <label className="block text-sm font-medium text-gray-700">Upload Image / Scan Document</label>
-                <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                    <div className="space-y-1 text-center">
-                        <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        <div className="flex text-sm text-gray-600">
-                            <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-teal-600 hover:text-teal-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-teal-500">
-                                <span>Choose file to upload</span>
-                                <input id="file-upload" name="file-upload" type="file" className="sr-only" onChange={handleFile} required />
-                            </label>
-                            <p className="pl-1">or drag and drop</p>
-                        </div>
-                        <p className="text-xs text-gray-500">PNG, JPG, GIF, PDF up to 10MB</p>
-                        {fileName && <p className="text-sm font-semibold text-teal-700 mt-2">{fileName}</p>}
-                    </div>
+          <h2 className="text-xl font-semibold text-gray-700 border-b pb-2">3. Digital Document</h2>
+          <div className="pt-4">
+            <label className="block text-sm font-medium text-gray-700">Upload Image / Scan Document</label>
+            <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+              <div className="space-y-1 text-center">
+                <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <div className="flex text-sm text-gray-600">
+                  <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-teal-600 hover:text-teal-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-teal-500">
+                    <span>Choose file to upload</span>
+                    <input id="file-upload" name="file-upload" type="file" className="sr-only" onChange={handleFile} required />
+                  </label>
+                  <p className="pl-1">or drag and drop</p>
                 </div>
+                <p className="text-xs text-gray-500">PNG, JPG, GIF, PDF up to 10MB</p>
+                {fileName && <p className="text-sm font-semibold text-teal-700 mt-2">{fileName}</p>}
+              </div>
             </div>
+          </div>
         </div>
 
         {/* Tombol Submit dan Status */}
@@ -324,7 +325,7 @@ export default function MintCertificate({ account }) {
               </button>
             </div>
           )}
-          
+
           {currentStep === 2 && (
             <div className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -341,10 +342,10 @@ export default function MintCertificate({ account }) {
               </button>
             </div>
           )}
-          
+
           {status && (
             <div className={`mt-4 p-4 rounded-md text-sm ${status.includes("Error") ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
-                {status}
+              {status}
             </div>
           )}
         </div>

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import LandCertificateABI from '../abis/LandCertificate.json';
+import { config } from '../config';
 
-const CONTRACT_ADDRESS = "0x4a0332c599Db448b1A84ebFA59cfD6918B14595d";
+const { CONTRACT_ADDRESS } = config;
 
 export default function VerifyPage() {
   const [tokenId, setTokenId] = useState('');
@@ -41,18 +42,18 @@ export default function VerifyPage() {
 
       // Fetch metadata from IPFS
       const tokenURI = await contract.tokenURI(tokenIdNum);
-      
+
       // Use Pinata gateway for IPFS
       // Check if it's already a full URL or just IPFS hash
-      const ipfsUrl = tokenURI.startsWith('http') 
-        ? tokenURI 
+      const ipfsUrl = tokenURI.startsWith('http')
+        ? tokenURI
         : `https://gateway.pinata.cloud/ipfs/${tokenURI}`;
-      
+
       const metadataResponse = await fetch(ipfsUrl);
       if (!metadataResponse.ok) {
         throw new Error(`Failed to fetch metadata: ${metadataResponse.status} ${metadataResponse.statusText}`);
       }
-      
+
       const metadata = await metadataResponse.json();
       // Parse metadata from IPFS
 
@@ -61,8 +62,8 @@ export default function VerifyPage() {
       if (parentTokenId && parentTokenId.toString() !== '0') {
         try {
           const parentTokenURI = await contract.tokenURI(parentTokenId);
-          const parentIpfsUrl = parentTokenURI.startsWith('http') 
-            ? parentTokenURI 
+          const parentIpfsUrl = parentTokenURI.startsWith('http')
+            ? parentTokenURI
             : `https://gateway.pinata.cloud/ipfs/${parentTokenURI}`;
           const parentResponse = await fetch(parentIpfsUrl);
           if (parentResponse.ok) {
@@ -78,8 +79,8 @@ export default function VerifyPage() {
       for (const childId of children) {
         try {
           const childTokenURI = await contract.tokenURI(childId);
-          const childIpfsUrl = childTokenURI.startsWith('http') 
-            ? childTokenURI 
+          const childIpfsUrl = childTokenURI.startsWith('http')
+            ? childTokenURI
             : `https://gateway.pinata.cloud/ipfs/${childTokenURI}`;
           const childResponse = await fetch(childIpfsUrl);
           if (childResponse.ok) {
@@ -121,7 +122,7 @@ export default function VerifyPage() {
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-8 mt-24">
       <h1 className="text-3xl font-bold text-gray-800 mb-8">Verify NFT Certificate</h1>
-      
+
       {/* Search Form */}
       <div className="bg-white p-6 rounded-2xl shadow-lg mb-8">
         <h2 className="text-xl font-semibold text-gray-700 mb-4">Enter Token ID</h2>
@@ -161,9 +162,8 @@ export default function VerifyPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600">Status</label>
-                <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                  verificationResult.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}>
+                <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${verificationResult.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
                   {verificationResult.isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
@@ -189,7 +189,7 @@ export default function VerifyPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-600">Location</label>
                 <p className="text-lg">
-                  {typeof verificationResult.metadata.lokasi === 'object' 
+                  {typeof verificationResult.metadata.lokasi === 'object'
                     ? `${verificationResult.metadata.lokasi.jalan}, RT ${verificationResult.metadata.lokasi.rt}, RW ${verificationResult.metadata.lokasi.rw}, ${verificationResult.metadata.lokasi.desa}, ${verificationResult.metadata.lokasi.kecamatan}, ${verificationResult.metadata.lokasi.kabupaten}, ${verificationResult.metadata.lokasi.provinsi}`
                     : verificationResult.metadata.lokasi
                   }
@@ -234,7 +234,7 @@ export default function VerifyPage() {
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-600">Digital Document</label>
-                <a 
+                <a
                   href={`https://gateway.pinata.cloud/ipfs/${verificationResult.metadata.fileCid}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -258,7 +258,7 @@ export default function VerifyPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-600">Parent Location</label>
                   <p className="text-lg">
-                    {typeof verificationResult.parentMetadata.lokasi === 'object' 
+                    {typeof verificationResult.parentMetadata.lokasi === 'object'
                       ? `${verificationResult.parentMetadata.lokasi.jalan}, RT ${verificationResult.parentMetadata.lokasi.rt}, RW ${verificationResult.parentMetadata.lokasi.rw}, ${verificationResult.parentMetadata.lokasi.desa}, ${verificationResult.parentMetadata.lokasi.kecamatan}, ${verificationResult.parentMetadata.lokasi.kabupaten}, ${verificationResult.parentMetadata.lokasi.provinsi}`
                       : verificationResult.parentMetadata.lokasi
                     }
@@ -293,7 +293,7 @@ export default function VerifyPage() {
                       <div>
                         <label className="block text-sm font-medium text-gray-600">Child Location</label>
                         <p>
-                          {typeof child.metadata.lokasi === 'object' 
+                          {typeof child.metadata.lokasi === 'object'
                             ? `${child.metadata.lokasi.jalan}, RT ${child.metadata.lokasi.rt}, RW ${child.metadata.lokasi.rw}, ${child.metadata.lokasi.desa}, ${child.metadata.lokasi.kecamatan}, ${child.metadata.lokasi.kabupaten}, ${child.metadata.lokasi.provinsi}`
                             : child.metadata.lokasi
                           }
@@ -391,7 +391,7 @@ function ActivitySection({ tokenId }) {
         onClick={() => setOpen(v => !v)}
         className="flex items-center gap-2 text-lg font-bold text-gray-700 hover:text-teal-600 focus:outline-none mb-2"
       >
-        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M12 5v14m7-7H5"/></svg>
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M12 5v14m7-7H5" /></svg>
         Activity
         <span className="ml-2 text-xs font-normal text-gray-400">{open ? 'Hide' : 'Show'}</span>
       </button>

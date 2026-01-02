@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import LandCertificateABI from '../abis/LandCertificate.json';
 import { getPendingMintRequests, removePendingMintRequest } from '../utils/pendingRequests';
+import { config } from '../config';
 
-const CONTRACT_ADDRESS = "0x4a0332c599Db448b1A84ebFA59cfD6918B14595d";
+const { CONTRACT_ADDRESS } = config;
 
 export default function Mint({ account }) {
   const [isInstitution, setIsInstitution] = useState(null);
@@ -50,20 +51,20 @@ export default function Mint({ account }) {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(CONTRACT_ADDRESS, LandCertificateABI, signer);
-      
+
       const tx = await contract.mintCertificate(
         request.to,
         request.tokenURI,
         request.signature
       );
-      
+
       setStatus(`Minting in progress... Transaction Hash: ${tx.hash}`);
       await tx.wait();
-      
+
       // Remove from pending requests
       removePendingMintRequest(request.id);
       loadPendingRequests();
-      
+
       setStatus(`Certificate successfully minted! Token will be minted to ${request.to}`);
     } catch (err) {
       console.error(err);
@@ -121,12 +122,12 @@ export default function Mint({ account }) {
                   </button>
                 </div>
               </div>
-              
+
               {/* Detailed View */}
               {selectedRequest === request.id && (
                 <div className="mt-4 p-6 bg-gray-50 rounded-lg border border-gray-200 space-y-4">
                   <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">Complete Request Details</h4>
-                  
+
                   {/* Basic Information */}
                   <div>
                     <h5 className="text-sm font-semibold text-gray-700 mb-2">Basic Information</h5>
@@ -307,7 +308,7 @@ export default function Mint({ account }) {
                   </div>
                 </div>
               )}
-              
+
               {/* Compact Preview (when details not shown) */}
               {selectedRequest !== request.id && request.metadata && (
                 <div className="mt-4 p-4 bg-gray-50 rounded-md">

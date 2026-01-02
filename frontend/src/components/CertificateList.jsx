@@ -4,10 +4,9 @@ import LandCertificateABI from '../abis/LandCertificate.json';
 import axios from 'axios';
 import { signSplitRequest } from '../utils/eip712';
 import { savePendingSplitRequest } from '../utils/pendingRequests';
+import { config } from '../config';
 
-const CONTRACT_ADDRESS = "0x4a0332c599Db448b1A84ebFA59cfD6918B14595d";
-const PINATA_API_KEY = "3477e87bd404b5490bbd";
-const PINATA_API_SECRET = "e2eb35f6fe50896ab89cda093648ce30e4cdeba62e31d7342f9fd83bcf50be1c";
+const { CONTRACT_ADDRESS, PINATA_API_KEY, PINATA_API_SECRET } = config;
 
 export default function CertificateList({ account }) {
   const [certs, setCerts] = useState([]);
@@ -17,7 +16,7 @@ export default function CertificateList({ account }) {
 
   useEffect(() => {
     if (account) {
-        fetchCertificates();
+      fetchCertificates();
     }
     async function checkInstitution() {
       if (!account) {
@@ -38,7 +37,7 @@ export default function CertificateList({ account }) {
       }
     }
     checkInstitution();
-  // eslint-disable-next-line
+    // eslint-disable-next-line
   }, [account]);
 
   async function fetchCertificates() {
@@ -54,16 +53,16 @@ export default function CertificateList({ account }) {
         let meta = {};
         let isActive = true;
         try {
-          const url = `https://gateway.pinata.cloud/ipfs/${tokenURI.replace('ipfs://','')}`;
+          const url = `https://gateway.pinata.cloud/ipfs/${tokenURI.replace('ipfs://', '')}`;
           const res = await fetch(url);
           if (res.ok) {
             meta = await res.json();
           } else {
-             console.error(`Failed to fetch metadata from ${url}: ${res.statusText}`);
+            console.error(`Failed to fetch metadata from ${url}: ${res.statusText}`);
           }
           isActive = await contract.isActive(tokenId);
-        } catch(e) {
-            console.error("Failed to parse JSON metadata", e)
+        } catch (e) {
+          console.error("Failed to parse JSON metadata", e)
         }
         certList.push({ tokenId: tokenId.toString(), tokenURI, meta, isActive });
       }
@@ -74,7 +73,7 @@ export default function CertificateList({ account }) {
     }
     setLoading(false);
   }
-  
+
   // Fungsi untuk fetch NFT by tokenId (dari blockchain & IPFS)
   async function fetchNFTById(tokenId) {
     try {
@@ -83,12 +82,12 @@ export default function CertificateList({ account }) {
       const tokenURI = await contract.tokenURI(tokenId);
       let meta = {};
       try {
-        const url = `https://gateway.pinata.cloud/ipfs/${tokenURI.replace('ipfs://','')}`;
+        const url = `https://gateway.pinata.cloud/ipfs/${tokenURI.replace('ipfs://', '')}`;
         const res = await fetch(url);
         if (res.ok) {
           meta = await res.json();
         }
-      } catch(e) {}
+      } catch (e) { }
       return { tokenId: tokenId.toString(), tokenURI, meta };
     } catch (err) {
       return null;
@@ -147,7 +146,7 @@ export default function CertificateList({ account }) {
             )}
             <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
               {cert.meta.image ? (
-                <img src={`https://gateway.pinata.cloud/ipfs/${cert.meta.image.replace('ipfs://','')}`} alt={cert.meta.namaPemilik || 'Property Picture'} className="w-full h-full object-cover"/>
+                <img src={`https://gateway.pinata.cloud/ipfs/${cert.meta.image.replace('ipfs://', '')}`} alt={cert.meta.namaPemilik || 'Property Picture'} className="w-full h-full object-cover" />
               ) : (
                 <svg xmlns="http://www.w3.org/2000" className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -175,8 +174,8 @@ function TransferButton({ tokenId }) {
   const [status, setStatus] = useState('');
   const handleTransfer = async () => {
     if (!to || !ethers.isAddress(to)) {
-        setStatus('Error: Address is not valid.');
-        return;
+      setStatus('Error: Address is not valid.');
+      return;
     }
     setStatus('Sending transaction...');
     try {
@@ -189,7 +188,7 @@ function TransferButton({ tokenId }) {
       await tx.wait();
       setStatus('Transfer successful!');
       // TODO: Idealnya, panggil ulang fetchCertificates daripada reload
-      setTimeout(() => window.location.reload(), 2000); 
+      setTimeout(() => window.location.reload(), 2000);
     } catch (err) {
       console.error(err);
       setStatus('Error: ' + (err.reason || err.message));
@@ -199,7 +198,7 @@ function TransferButton({ tokenId }) {
     <div className="space-y-2">
       <h3 className="text-lg font-semibold text-gray-700">Ownership Transfer</h3>
       <div className="flex items-center space-x-2">
-        <input value={to} onChange={e=>setTo(e.target.value)} placeholder="Destination Address" className="flex-grow p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500" />
+        <input value={to} onChange={e => setTo(e.target.value)} placeholder="Destination Address" className="flex-grow p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500" />
         <button onClick={handleTransfer} className="bg-teal-600 text-white font-bold py-2 px-4 rounded-md hover:bg-teal-700 transition-colors">Transfer</button>
       </div>
       {status && <div className="text-sm text-gray-600 mt-2">{status}</div>}
@@ -214,7 +213,7 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
   const [recipients, setRecipients] = useState(Array(2).fill(''));
   const [metas, setMetas] = useState(Array(2).fill(null).map(() => ({
     lokasi: { ...cert.meta.lokasi },
-    luas: '', 
+    luas: '',
     statusHukum: cert.meta.statusHukum || '',
     deskripsi: cert.meta.deskripsi || '',
     nomorSuratUkur: '',
@@ -244,7 +243,7 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
     while (newRecipients.length < n) newRecipients.push('');
     while (newMetas.length < n) newMetas.push({
       lokasi: { ...cert.meta.lokasi },
-      luas: '', 
+      luas: '',
       statusHukum: cert.meta.statusHukum || '',
       deskripsi: cert.meta.deskripsi || '',
       nomorSuratUkur: '',
@@ -260,25 +259,25 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
     setRecipients(newRecipients.slice(0, n));
     setMetas(newMetas.slice(0, n));
   };
-  
+
   const handleRecipient = (i, val) => {
     const arr = [...recipients];
     arr[i] = val;
     setRecipients(arr);
   };
-  
+
   const handleMeta = (i, field, val) => {
     const arr = [...metas];
     if (field.startsWith('lokasi.')) {
-        const lokField = field.split('.')[1];
-        arr[i].lokasi[lokField] = val;
+      const lokField = field.split('.')[1];
+      arr[i].lokasi[lokField] = val;
     } else {
-        arr[i][field] = val;
+      arr[i][field] = val;
     }
     setMetas(arr);
     validateLuas();
   };
-  
+
   const handleFile = (i, file) => {
     const arr = [...metas];
     arr[i].file = file;
@@ -289,23 +288,23 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
   // Check approval status and ownership when form is shown
   useEffect(() => {
     if (!show || !account) return;
-    
+
     const checkApproval = async () => {
       try {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const contract = new ethers.Contract(CONTRACT_ADDRESS, LandCertificateABI, provider);
         const owner = await contract.ownerOf(tokenId);
         setOwnerAddress(owner);
-        
+
         const isTokenOwner = owner.toLowerCase() === account.toLowerCase();
         setIsOwner(isTokenOwner);
-        
+
         // Only check approval if institution is trying to split
         const institutionAddr = institutionAddress || account;
         if (isInstitution && !isTokenOwner) {
           const approved = await contract.getApproved(tokenId);
           const isApprovedForAll = await contract.isApprovedForAll(owner, institutionAddr);
-          
+
           setIsApproved(approved.toLowerCase() === institutionAddr.toLowerCase() || isApprovedForAll);
         } else if (isTokenOwner && isInstitution) {
           // Owner is also institution, no approval needed
@@ -318,7 +317,7 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
         setIsApproved(false);
       }
     };
-    
+
     checkApproval();
   }, [show, account, isInstitution, tokenId, institutionAddress]);
 
@@ -327,16 +326,16 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
       setStatus('Error: Only the certificate owner can approve.');
       return;
     }
-    
+
     // Determine which institution to approve
     // If institutionAddress is provided, use it; otherwise use account if it's an institution
     const institutionToApprove = institutionAddress || (isInstitution ? account : null);
-    
+
     if (!institutionToApprove) {
       setStatus('Error: Institution address is required for approval.');
       return;
     }
-    
+
     setStatus('Requesting approval...');
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
@@ -364,7 +363,7 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
     setError('');
     return true;
   };
-  
+
   const uploadToPinata = async (meta, file) => {
     let finalMeta = { ...meta };
     delete finalMeta.file;
@@ -409,15 +408,15 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
   const handleSplit = async () => {
     if (!validateLuas()) return;
 
-    for(let i=0; i<recipients.length; i++) {
-        if (!recipients[i] || !ethers.isAddress(recipients[i])) {
-            setStatus(`Error: Destination Address #${i+1} is not valid.`);
-            return;
-        }
-        if(!metas[i].luas || parseFloat(metas[i].luas) <= 0) {
-            setStatus(`Error: Total Child Area #${i+1} Must be greater than 0.`);
-            return;
-        }
+    for (let i = 0; i < recipients.length; i++) {
+      if (!recipients[i] || !ethers.isAddress(recipients[i])) {
+        setStatus(`Error: Destination Address #${i + 1} is not valid.`);
+        return;
+      }
+      if (!metas[i].luas || parseFloat(metas[i].luas) <= 0) {
+        setStatus(`Error: Total Child Area #${i + 1} Must be greater than 0.`);
+        return;
+      }
     }
 
     // Only owner can create split request
@@ -438,15 +437,15 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
         delete metaWithParent.file; // Remove file object before upload
         return uploadToPinata(metaWithParent, m.file);
       }));
-      
+
       setStatus('Metadata uploaded. Requesting owner signature...');
       setCurrentStep(3);
-      
+
       // Request signature from owner
       const provider = new ethers.BrowserProvider(window.ethereum);
       const network = await provider.getNetwork();
       const chainId = network.chainId;
-      
+
       const signature = await signSplitRequest(
         provider,
         account, // Signer must be the owner (account is owner)
@@ -479,7 +478,7 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
       });
 
       setStatus(`Split request signed and saved! Request ID: ${request.id}.`);
-      
+
       // Don't close form yet - show approval section
       setCurrentStep(4); // Step 4: Approval needed
     } catch (err) {
@@ -494,7 +493,7 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
 
   return (
     <div className="space-y-2">
-      <button onClick={()=>setShow(!show)} className="w-full bg-gray-700 text-white font-bold py-2 px-4 rounded-md hover:bg-gray-800 transition-colors flex justify-center items-center">
+      <button onClick={() => setShow(!show)} className="w-full bg-gray-700 text-white font-bold py-2 px-4 rounded-md hover:bg-gray-800 transition-colors flex justify-center items-center">
         {show ? 'Close Split Form' : 'Split Certificate'}
       </button>
       {show && (
@@ -505,7 +504,7 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
               <p className="text-sm text-gray-700">Only the certificate owner can create split requests.</p>
             </div>
           )}
-          
+
           {(isOwner || isInstitution) && (
             <>
               {/* Approval Status - Only show if institution is not the owner */}
@@ -517,7 +516,7 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
                   {status && <div className="text-xs text-yellow-700 mt-2">{status}</div>}
                 </div>
               )}
-              
+
               {/* Show approve button for owner if institutionAddress is provided */}
               {isOwner && isApproved === false && institutionAddress && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -532,14 +531,14 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
                   {status && <div className="text-xs text-blue-700 mt-2">{status}</div>}
                 </div>
               )}
-              
+
               {isOwner && isApproved === true && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <p className="text-sm text-green-800 font-medium">✓ Institution Approved</p>
                   <p className="text-xs text-green-700 mt-1">The institution can execute this split request.</p>
                 </div>
               )}
-              
+
               {isOwner && isApproved === null && (
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                   <p className="text-sm text-gray-700">You can create and sign the split request. Approval from institution can be done later if needed.</p>
@@ -550,35 +549,35 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
 
           <div>
             <label className="font-semibold text-gray-700">Number of Child Certificates</label>
-            <input type="number" min={2} value={numChildren} onChange={e=>handleNumChildren(e.target.value)} className="mt-1 w-24 p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500" />
+            <input type="number" min={2} value={numChildren} onChange={e => handleNumChildren(e.target.value)} className="mt-1 w-24 p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500" />
             {error && <div className="text-red-600 mt-2">{error}</div>}
           </div>
-          
-          {[...Array(numChildren)].map((_,i)=>(
+
+          {[...Array(numChildren)].map((_, i) => (
             <div key={i} className="p-4 border-t border-gray-200 space-y-3">
-              <h4 className="font-bold text-md text-teal-700">Child #{i+1}</h4>
+              <h4 className="font-bold text-md text-teal-700">Child #{i + 1}</h4>
               <div>
                 <label className="block text-xs font-medium text-gray-600">Receiver Address</label>
-                <input value={recipients[i]} onChange={e=>handleRecipient(i, e.target.value)} className="mt-1 w-full p-2 border border-gray-300 rounded-md" />
+                <input value={recipients[i]} onChange={e => handleRecipient(i, e.target.value)} className="mt-1 w-full p-2 border border-gray-300 rounded-md" />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-600">Total Area (m²)</label>
-                  <input type="number" value={metas[i].luas} onChange={e=>handleMeta(i, 'luas', e.target.value)} className="mt-1 w-full p-2 border border-gray-300 rounded-md" />
+                  <input type="number" value={metas[i].luas} onChange={e => handleMeta(i, 'luas', e.target.value)} className="mt-1 w-full p-2 border border-gray-300 rounded-md" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600">Legal Status</label>
-                  <input value={metas[i].statusHukum} onChange={e=>handleMeta(i, 'statusHukum', e.target.value)} className="mt-1 w-full p-2 border border-gray-300 rounded-md" />
+                  <input value={metas[i].statusHukum} onChange={e => handleMeta(i, 'statusHukum', e.target.value)} className="mt-1 w-full p-2 border border-gray-300 rounded-md" />
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600">Description</label>
-                <textarea value={metas[i].deskripsi} onChange={e=>handleMeta(i, 'deskripsi', e.target.value)} rows="2" className="mt-1 w-full border border-gray-300 rounded-md" />
+                <textarea value={metas[i].deskripsi} onChange={e => handleMeta(i, 'deskripsi', e.target.value)} rows="2" className="mt-1 w-full border border-gray-300 rounded-md" />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                 <div>
                   <label className="block text-xs font-medium text-gray-600">Land Survey Number & Date</label>
-                  <input type="text" value={metas[i].nomorSuratUkur} onChange={e=>handleMeta(i, 'nomorSuratUkur', e.target.value)} placeholder="cth. SU.0123/2024" className="mt-1 w-full border border-gray-300 rounded-md" />
+                  <input type="text" value={metas[i].nomorSuratUkur} onChange={e => handleMeta(i, 'nomorSuratUkur', e.target.value)} placeholder="cth. SU.0123/2024" className="mt-1 w-full border border-gray-300 rounded-md" />
                 </div>
               </div>
               <div className="space-y-2 pt-2">
@@ -586,26 +585,26 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-600">North Boundary</label>
-                    <input type="text" value={metas[i].batasUtara} onChange={e=>handleMeta(i, 'batasUtara', e.target.value)} className="mt-1 w-full border border-gray-300 rounded-md" />
+                    <input type="text" value={metas[i].batasUtara} onChange={e => handleMeta(i, 'batasUtara', e.target.value)} className="mt-1 w-full border border-gray-300 rounded-md" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600">East Boundary</label>
-                    <input type="text" value={metas[i].batasTimur} onChange={e=>handleMeta(i, 'batasTimur', e.target.value)} className="mt-1 w-full border border-gray-300 rounded-md" />
+                    <input type="text" value={metas[i].batasTimur} onChange={e => handleMeta(i, 'batasTimur', e.target.value)} className="mt-1 w-full border border-gray-300 rounded-md" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600">West Boundary</label>
-                    <input type="text" value={metas[i].batasBarat} onChange={e=>handleMeta(i, 'batasBarat', e.target.value)} className="mt-1 w-full border border-gray-300 rounded-md" />
+                    <input type="text" value={metas[i].batasBarat} onChange={e => handleMeta(i, 'batasBarat', e.target.value)} className="mt-1 w-full border border-gray-300 rounded-md" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600">South Boundary</label>
-                    <input type="text" value={metas[i].batasSelatan} onChange={e=>handleMeta(i, 'batasSelatan', e.target.value)} className="mt-1 w-full border border-gray-300 rounded-md" />
+                    <input type="text" value={metas[i].batasSelatan} onChange={e => handleMeta(i, 'batasSelatan', e.target.value)} className="mt-1 w-full border border-gray-300 rounded-md" />
                   </div>
                 </div>
               </div>
               {/* Sisakan field lain jika diperlukan, atau bisa di-autofill dari parent */}
               <div>
                 <label className="block text-xs font-medium text-gray-600">Upload New Image/Document (Optional)</label>
-                <input type="file" onChange={e=>handleFile(i, e.target.files[0])} className="mt-1 w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"/>
+                <input type="file" onChange={e => handleFile(i, e.target.files[0])} className="mt-1 w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100" />
               </div>
             </div>
           ))}
@@ -617,7 +616,7 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
                 <p className="text-sm text-green-800 font-medium">✓ Split Request Created Successfully!</p>
                 <p className="text-xs text-green-700 mt-1">Your split request has been signed and saved. An institution can now execute it.</p>
               </div>
-              
+
               {/* Approval Section - After Split Request Created */}
               {isOwner && !isApproved && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
@@ -627,7 +626,7 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
                       To allow an institution to execute this split request, you need to approve them first. Enter the institution address below and approve.
                     </p>
                   </div>
-                  
+
                   <div>
                     <label className="block text-xs font-medium text-blue-700 mb-1">Institution Address</label>
                     <input
@@ -639,7 +638,7 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
                     />
                     <p className="text-xs text-blue-600 mt-1">Enter the address of the institution that will execute this split</p>
                   </div>
-                  
+
                   <button
                     onClick={async () => {
                       const targetInstitution = institutionToApprove || institutionAddress;
@@ -647,7 +646,7 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
                         setApprovalStatus('Error: Please enter a valid institution address.');
                         return;
                       }
-                      
+
                       setApprovalStatus('Requesting approval...');
                       try {
                         const provider = new ethers.BrowserProvider(window.ethereum);
@@ -660,7 +659,7 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
                         const approved = await contract.getApproved(tokenId);
                         const isApprovedForAll = await contract.isApprovedForAll(ownerAddress, targetInstitution);
                         setIsApproved(approved.toLowerCase() === targetInstitution.toLowerCase() || isApprovedForAll);
-                        
+
                         setApprovalStatus('✓ Approval successful! The institution can now execute your split request.');
                       } catch (err) {
                         console.error(err);
@@ -675,14 +674,14 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
                   {approvalStatus && <div className={`text-xs mt-2 ${approvalStatus.includes("Error") ? 'text-red-700' : approvalStatus.includes("✓") ? 'text-green-700' : 'text-blue-700'}`}>{approvalStatus}</div>}
                 </div>
               )}
-              
+
               {isOwner && isApproved === true && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <p className="text-sm text-green-800 font-medium">✓ Institution Approved</p>
                   <p className="text-xs text-green-700 mt-1">The institution can now execute your split request.</p>
                 </div>
               )}
-              
+
               <div className="flex gap-2">
                 <button
                   onClick={() => {
@@ -701,9 +700,9 @@ function SplitButton({ tokenId, cert, account, isInstitution, institutionAddress
           {/* Split Request Button - Only show if not in step 4 */}
           {currentStep !== 4 && (
             <div className="pt-4">
-              <button 
-                onClick={handleSplit} 
-                disabled={!!error || !isOwner || !!status.includes("Waiting") || !!status.includes("Uploading") || !!status.includes("Requesting") || !!status.includes("signed and saved")} 
+              <button
+                onClick={handleSplit}
+                disabled={!!error || !isOwner || !!status.includes("Waiting") || !!status.includes("Uploading") || !!status.includes("Requesting") || !!status.includes("signed and saved")}
                 className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-400"
               >
                 {!isOwner ? 'Owner Only' : 'Create Split Request & Sign'}
@@ -759,7 +758,7 @@ function ActivitySection({ tokenId }) {
         onClick={() => setOpen(v => !v)}
         className="flex items-center gap-2 text-lg font-bold text-gray-700 hover:text-teal-600 focus:outline-none mb-2"
       >
-        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M12 5v14m7-7H5"/></svg>
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M12 5v14m7-7H5" /></svg>
         Activity
         <span className="ml-2 text-xs font-normal text-gray-400">{open ? 'Hide' : 'Show'}</span>
       </button>
@@ -804,7 +803,7 @@ function ContractAddressSection() {
         onClick={() => setOpen(v => !v)}
         className="flex items-center gap-2 text-lg font-bold text-gray-700 hover:text-teal-600 focus:outline-none mb-2"
       >
-        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M12 5v14m7-7H5"/></svg>
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M12 5v14m7-7H5" /></svg>
         Contract Address
         <span className="ml-2 text-xs font-normal text-gray-400">{open ? 'Hide' : 'Show'}</span>
       </button>
@@ -814,7 +813,7 @@ function ContractAddressSection() {
             <span className="font-mono text-sm break-all">{CONTRACT_ADDRESS}</span>
             <button
               className="ml-2 px-2 py-1 text-xs bg-teal-600 text-white rounded hover:bg-teal-700"
-              onClick={() => {navigator.clipboard.writeText(CONTRACT_ADDRESS)}}
+              onClick={() => { navigator.clipboard.writeText(CONTRACT_ADDRESS) }}
             >Copy</button>
           </div>
         </div>
@@ -861,7 +860,7 @@ function NFTDetail({ cert, fetchNFTById, onBack }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mt-2">
         <div>
           <p className="text-sm font-medium text-gray-500">Owner Wallet Address</p>
-          <p className="text-lg text-gray-800 font-mono">{owner.slice(0,6)}...{owner.slice(-4)}</p>
+          <p className="text-lg text-gray-800 font-mono">{owner.slice(0, 6)}...{owner.slice(-4)}</p>
         </div>
         {/* <div>
           <p className="text-sm font-medium text-gray-500">Nama Pemilik</p>
@@ -923,12 +922,12 @@ function NFTDetail({ cert, fetchNFTById, onBack }) {
             </a>
           </div>
         )}
-        
+
       </div>
-      
+
       {/* Tampilkan Children Section */}
       <ChildrenSection tokenId={cert.tokenId} fetchNFTById={fetchNFTById} />
-      
+
       {/* Rekursif tampilkan parent jika ada dan sudah di-load */}
       {parentCert && (
         <div className="mt-8">
@@ -982,7 +981,7 @@ function ChildrenSection({ tokenId, fetchNFTById }) {
         onClick={() => setOpen(v => !v)}
         className="flex items-center gap-2 text-lg font-bold text-gray-700 hover:text-teal-600 focus:outline-none mb-2"
       >
-        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M12 5v14m7-7H5"/></svg>
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M12 5v14m7-7H5" /></svg>
         Children Certificates
         <span className="ml-2 text-xs font-normal text-gray-400">{open ? 'Hide' : 'Show'}</span>
       </button>
@@ -999,7 +998,7 @@ function ChildrenSection({ tokenId, fetchNFTById }) {
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <h4 className="font-semibold text-gray-800">Child #{child.tokenId}</h4>
-                      <p className="text-sm text-gray-600">Owner: {child.ownerAddress ? `${child.ownerAddress.slice(0,6)}...${child.ownerAddress.slice(-4)}` : '-'}</p>
+                      <p className="text-sm text-gray-600">Owner: {child.ownerAddress ? `${child.ownerAddress.slice(0, 6)}...${child.ownerAddress.slice(-4)}` : '-'}</p>
                       <p className="text-sm text-gray-600">Area: {child.meta.luas} m²</p>
                       <p className="text-sm text-gray-600">Location: {child.meta.lokasi?.kabupaten || 'N/A'}</p>
                     </div>

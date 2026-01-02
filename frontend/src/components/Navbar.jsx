@@ -9,6 +9,9 @@ import SearchIcon from '../icons/SearchIcon';
 import { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import LandCertificateABI from '../abis/LandCertificate.json';
+import { config } from '../config';
+
+const { CONTRACT_ADDRESS } = config;
 
 export default function Navbar({ account, connectWallet }) {
   const activeLink = 'bg-green-100 text-green-800';
@@ -26,16 +29,16 @@ export default function Navbar({ account, connectWallet }) {
       try {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const contract = new ethers.Contract(
-          "0x4a0332c599Db448b1A84ebFA59cfD6918B14595d",
+          CONTRACT_ADDRESS,
           LandCertificateABI,
           provider
         );
-        
+
         // Check if user is institution
         const allowed = await contract.isInstitution(account);
         setIsInstitution(allowed);
         console.log('Is Institution:', allowed, 'Account:', account);
-        
+
         // Check if user is contract owner
         const owner = await contract.owner();
         const normalizedOwner = ethers.getAddress(owner); // Ensure checksum format
@@ -43,7 +46,7 @@ export default function Navbar({ account, connectWallet }) {
         const isOwner = normalizedOwner.toLowerCase() === normalizedAccount.toLowerCase();
         setIsContractOwner(isOwner);
         console.log('Contract Owner:', normalizedOwner, 'Is Owner:', isOwner, 'Account:', normalizedAccount);
-        
+
         // Note: Contract owner should also be institution (set in constructor)
         // If owner is not institution, something is wrong
         if (isOwner && !allowed) {
@@ -64,33 +67,33 @@ export default function Navbar({ account, connectWallet }) {
         <span className="font-bold text-xl text-gray-800">LandChain</span>
       </div>
       <div className="flex gap-2 items-center">
-        <NavLink to="/" className={({isActive}) => `${isActive ? activeLink : normalLink} px-3 py-2 rounded-md flex items-center gap-2 font-medium`}>
+        <NavLink to="/" className={({ isActive }) => `${isActive ? activeLink : normalLink} px-3 py-2 rounded-md flex items-center gap-2 font-medium`}>
           <HomeIcon /> Home
         </NavLink>
-        <NavLink to="/certificates" className={({isActive}) => `${isActive ? activeLink : normalLink} px-3 py-2 rounded-md flex items-center gap-2 font-medium`}>
+        <NavLink to="/certificates" className={({ isActive }) => `${isActive ? activeLink : normalLink} px-3 py-2 rounded-md flex items-center gap-2 font-medium`}>
           <GridIcon /> My Properties
         </NavLink>
-        <NavLink to="/verify" className={({isActive}) => `${isActive ? activeLink : normalLink} px-3 py-2 rounded-md flex items-center gap-2 font-medium`}>
+        <NavLink to="/verify" className={({ isActive }) => `${isActive ? activeLink : normalLink} px-3 py-2 rounded-md flex items-center gap-2 font-medium`}>
           <SearchIcon />
           Verify
         </NavLink>
         {account && (
-          <NavLink to="/request-mint" className={({isActive}) => `${isActive ? activeLink : normalLink} px-3 py-2 rounded-md flex items-center gap-2 font-medium`}>
+          <NavLink to="/request-mint" className={({ isActive }) => `${isActive ? activeLink : normalLink} px-3 py-2 rounded-md flex items-center gap-2 font-medium`}>
             <PlusCircleIcon /> Request Mint
           </NavLink>
         )}
         {isInstitution && (
           <>
-            <NavLink to="/mint" className={({isActive}) => `${isActive ? activeLink : normalLink} px-3 py-2 rounded-md flex items-center gap-2 font-medium`}>
+            <NavLink to="/mint" className={({ isActive }) => `${isActive ? activeLink : normalLink} px-3 py-2 rounded-md flex items-center gap-2 font-medium`}>
               <PlusCircleIcon /> Execute Mint
             </NavLink>
-            <NavLink to="/execute-split" className={({isActive}) => `${isActive ? activeLink : normalLink} px-3 py-2 rounded-md flex items-center gap-2 font-medium`}>
+            <NavLink to="/execute-split" className={({ isActive }) => `${isActive ? activeLink : normalLink} px-3 py-2 rounded-md flex items-center gap-2 font-medium`}>
               <PlusCircleIcon /> Execute Split
             </NavLink>
           </>
         )}
         {isContractOwner && (
-          <NavLink to="/admin" className={({isActive}) => `${isActive ? activeLink : normalLink} px-3 py-2 rounded-md flex items-center gap-2 font-medium`}>
+          <NavLink to="/admin" className={({ isActive }) => `${isActive ? activeLink : normalLink} px-3 py-2 rounded-md flex items-center gap-2 font-medium`}>
             <ShieldIcon />
             Admin
           </NavLink>
@@ -111,7 +114,7 @@ export default function Navbar({ account, connectWallet }) {
           {account ? (
             <>
               <WalletIcon />
-              <span className="font-mono">{account.slice(0,6)}...{account.slice(-4)}</span>
+              <span className="font-mono">{account.slice(0, 6)}...{account.slice(-4)}</span>
             </>
           ) : (
             <>

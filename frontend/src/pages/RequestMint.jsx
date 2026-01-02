@@ -3,10 +3,9 @@ import { ethers } from 'ethers';
 import axios from 'axios';
 import { signMintRequest } from '../utils/eip712';
 import { savePendingMintRequest } from '../utils/pendingRequests';
+import { config } from '../config';
 
-const CONTRACT_ADDRESS = "0x4a0332c599Db448b1A84ebFA59cfD6918B14595d";
-const PINATA_API_KEY = "3477e87bd404b5490bbd";
-const PINATA_API_SECRET = "e2eb35f6fe50896ab89cda093648ce30e4cdeba62e31d7342f9fd83bcf50be1c";
+const { CONTRACT_ADDRESS, PINATA_API_KEY, PINATA_API_SECRET } = config;
 
 export default function RequestMint({ account }) {
   const [form, setForm] = useState({
@@ -51,7 +50,7 @@ export default function RequestMint({ account }) {
       metadata.image = imageCid;
       metadata.fileCid = imageCid;
     }
-    
+
     const res2 = await axios.post('https://api.pinata.cloud/pinning/pinJSONToIPFS', metadata, {
       headers: {
         'Content-Type': 'application/json',
@@ -68,10 +67,10 @@ export default function RequestMint({ account }) {
       setStatus("Error: Please connect your wallet first.");
       return;
     }
-    
+
     setStatus('Uploading data to IPFS (Pinata)...');
     setCurrentStep(1);
-    
+
     try {
       const metadata = {
         lokasi: {
@@ -93,7 +92,7 @@ export default function RequestMint({ account }) {
       setCid(uploadedCid);
       setStatus('Data successfully uploaded to IPFS. Please sign the mint request.');
       setCurrentStep(2);
-      
+
     } catch (err) {
       console.error(err);
       setStatus('Upload failed, please try again');
@@ -108,12 +107,12 @@ export default function RequestMint({ account }) {
     }
 
     setStatus('Requesting signature...');
-    
+
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const network = await provider.getNetwork();
       const chainId = network.chainId;
-      
+
       // Sign as the land owner (account is the recipient)
       const signature = await signMintRequest(
         provider,
@@ -147,10 +146,12 @@ export default function RequestMint({ account }) {
       });
 
       setStatus(`Mint request signed and saved! Request ID: ${request.id}. An institution can now execute this mint request.`);
-      
+
       // Reset form
-      setForm({ jalan: '', rt: '', rw: '', desa: '', kecamatan: '', kabupaten: '', provinsi: '', luas: '', statusHukum: '', deskripsi: '',
-        nomorSuratUkur: '', batasUtara: '', batasTimur: '', batasBarat: '', batasSelatan: '' });
+      setForm({
+        jalan: '', rt: '', rw: '', desa: '', kecamatan: '', kabupaten: '', provinsi: '', luas: '', statusHukum: '', deskripsi: '',
+        nomorSuratUkur: '', batasUtara: '', batasTimur: '', batasBarat: '', batasSelatan: ''
+      });
       setFile(null);
       setFileName('');
       setCid('');
@@ -172,7 +173,7 @@ export default function RequestMint({ account }) {
     <div className="max-w-4xl mx-auto p-4 md:p-8 mt-24">
       <h1 className="text-3xl font-bold text-gray-800 mb-2">Request Mint Certificate</h1>
       <p className="text-gray-600 mb-8">Fill in all the details below to request a mint certificate. After signing, an institution can execute the mint for you.</p>
-      
+
       {/* Step Indicator */}
       <div className="mb-6 bg-white p-4 rounded-lg shadow-md">
         <div className="flex items-center justify-between">
@@ -187,7 +188,7 @@ export default function RequestMint({ account }) {
           </div>
         </div>
       </div>
-      
+
       <form onSubmit={handleSubmit} className="space-y-8 bg-white p-8 rounded-2xl shadow-lg">
         {/* Informasi Properti */}
         <div className="space-y-4">
@@ -259,11 +260,11 @@ export default function RequestMint({ account }) {
               <label htmlFor="kecamatan" className="block text-sm font-medium text-gray-700">District</label>
               <input type="text" name="kecamatan" id="kecamatan" value={form.kecamatan} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" required />
             </div>
-             <div>
+            <div>
               <label htmlFor="kabupaten" className="block text-sm font-medium text-gray-700">Regency / City</label>
               <input type="text" name="kabupaten" id="kabupaten" value={form.kabupaten} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" required />
             </div>
-             <div>
+            <div>
               <label htmlFor="provinsi" className="block text-sm font-medium text-gray-700">Province</label>
               <input type="text" name="provinsi" id="provinsi" value={form.provinsi} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" required />
             </div>
@@ -307,7 +308,7 @@ export default function RequestMint({ account }) {
               </button>
             </div>
           )}
-          
+
           {currentStep === 2 && (
             <div className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -324,7 +325,7 @@ export default function RequestMint({ account }) {
               </button>
             </div>
           )}
-          
+
           {status && (
             <div className={`mt-4 p-4 rounded-md text-sm ${status.includes("Error") ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
               {status}
